@@ -71,7 +71,7 @@ app.get('/user/:id', (req, res) => {
               that actually help
             </h2>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Our AI doesn't just find bugs—it understands your code context and 
+              Our AI doesn&rsquo;t just find bugs—it understands your code context and 
               provides intelligent suggestions that improve security, performance, 
               and maintainability.
             </p>
@@ -168,3 +168,39 @@ app.get('/user/:id', (req, res) => {
                     <code>{codeExample}</code>
                   </pre>
                 </div>
+                
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <span>✓ Auto-fix available</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      Dismiss
+                    </Button>
+                    <Button size="sm" className="bg-primary text-primary-foreground">
+                      Apply Fix
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Summary */}
+              <div className="border-t border-border px-6 py-4 bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-sm">
+                    <span className="text-primary font-medium">✓ 23 Issues Resolved</span>
+                    <span className="text-muted-foreground">2 Pending Review</span>
+                  </div>
+                  <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    Apply All Fixes
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

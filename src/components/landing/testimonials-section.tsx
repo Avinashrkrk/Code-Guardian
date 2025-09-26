@@ -58,8 +58,9 @@ export function TestimonialsSection() {
 
               {/* Content */}
               <blockquote className="text-muted-foreground mb-6 leading-relaxed">
-                "{testimonial.content}"
+                &ldquo;{testimonial.content}&rdquo;
               </blockquote>
+
 
               {/* Author */}
               <div className="flex items-center space-x-4">

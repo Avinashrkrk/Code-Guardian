@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Code, Zap } from "lucide-react";
-import Image from "next/image";
 
 export function HeroSection() {
   return (
@@ -97,11 +96,14 @@ export function HeroSection() {
                       Potential SQL injection vulnerability in user authentication
                     </p>
                     <div className="bg-muted rounded p-2 font-mono text-xs">
-                      <span className="text-destructive">- query = "SELECT * FROM users WHERE id = " + userId</span>
+                      <span className="text-destructive">
+                        - query = &quot;SELECT * FROM users WHERE id = &quot; + userId
+                      </span>
                       <br />
-                      <span className="text-primary">+ query = "SELECT * FROM users WHERE id = ?"</span>
+                      <span className="text-primary">
+                        + query = &quot;SELECT * FROM users WHERE id = ?&quot;
+                      </span>
                     </div>
-                  </div>
 
                   <div className="bg-background border border-border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -129,6 +131,7 @@ export function HeroSection() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

@@ -3,7 +3,7 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { TrustedBy } from "@/components/landing/trusted-by";
 import { FeaturesSection } from "@/components/landing/features-section";
 import { StatsSection } from "@/components/landing/stats-section";
-// import { CodeReviewsSection } from "@/components/landing/code-reviews-section";
+import { CodeReviewsSection } from "@/components/landing/code-reviews-section";
 import { SecuritySection } from "@/components/landing/security-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { CTASection } from "@/components/landing/cta-section";
@@ -17,7 +17,7 @@ export default function LandingPage() {
       <TrustedBy />
       <StatsSection />
       <FeaturesSection />
-      {/* <CodeReviewsSection /> */}
+      <CodeReviewsSection />
       <SecuritySection />
       <TestimonialsSection />
       <CTASection />

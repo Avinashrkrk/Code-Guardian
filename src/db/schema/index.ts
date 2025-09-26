@@ -1,5 +1,7 @@
 import * as users from './users';
 import * as accounts from './accounts';
+import * as sessions from './sessions';
+import * as verificationTokens from './verificationTokens';
 import * as repositories from './repositories';
 import * as reviewJobs from './reviewJobs';
 import * as relations from './relations';
@@ -8,6 +10,8 @@ import * as relations from './relations';
 const schema = {
   ...users,
   ...accounts,
+  ...sessions,
+  ...verificationTokens,
   ...repositories,
   ...reviewJobs,
   ...relations,

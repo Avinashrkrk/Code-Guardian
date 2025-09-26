@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+// import { Button } from "@/components/ui/button";
+// import { Moon, Sun } from "lucide-react";
+// import { useTheme } from "next-themes";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -12,7 +12,6 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
-  const { theme, setTheme } = useTheme();
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">

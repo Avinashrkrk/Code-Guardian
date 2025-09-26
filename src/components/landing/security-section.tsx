@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Lock, Eye, Database } from "lucide-react";
+import { Shield, Lock, Eye } from "lucide-react";
 
 export function SecuritySection() {
   const securityFeatures = [

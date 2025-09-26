@@ -17,7 +17,7 @@ export function TrustedBy() {
             </p>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center">
-              {companies.map((company, index) => (
+              {companies.map((company) => (
                 <div
                   key={company.name}
                   className="flex items-center justify-center p-4 rounded-lg hover:bg-accent transition-colors group"
