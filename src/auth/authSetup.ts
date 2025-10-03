@@ -15,20 +15,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
+  session: {
+    strategy: 'jwt',
+  },
 
   // 2. Configure the GitHub Provider with your credentials
   providers: [
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
+      authorization: {
+        params: {
+          scope: 'repo read:user user:email',
+        },
+      },
     }),
   ],
 
   // 3. Add a callback to enrich the session object
   callbacks: {
-    async session({ session, user }) {
-      session.user.id = user.id;
-      return session;
+    async jwt({ token, account }) {
+      if (account) {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.expiresAt = account.expires_at;
+        token.tokenType = account.token_type;
+        token.scope = account.scope;
+      }
+      return token;
+    },
+    async session({ session, token, user }) {
+      // Ensure we always have the user id available from the JWT subject
+      const anySession = session as any;
+      anySession.user = anySession.user ?? {};
+      anySession.user.id = (token?.sub as string | undefined) ?? (user as any)?.id ?? anySession.user.id;
+      // expose tokens to server components
+      anySession.accessToken = token?.accessToken as string | undefined;
+      anySession.refreshToken = token?.refreshToken as string | undefined;
+      anySession.expiresAt = token?.expiresAt as number | undefined;
+      return anySession;
     },
   },
 });
