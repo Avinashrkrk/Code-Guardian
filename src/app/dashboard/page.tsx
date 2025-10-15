@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { Octokit } from "@octokit/rest";
 import { RepositoriesTable } from "@/components/dashboard/repositories-table";
 import { redirect } from "next/navigation";
+import { DashboardHeader } from "@/components/dashboard/header";
 
 type Repositories = Endpoints["GET /user/repos"]["response"]["data"];
 
@@ -113,6 +114,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="h-full">
+      <DashboardHeader
+        title="Repositories"
+        description="List of repositories accessible to Code Guardian."
+        actionLabel="Add Repositories"
+      />
       {activeAccessToken && !needsReconnect ? (
         <RepositoriesTable
           repositories={
