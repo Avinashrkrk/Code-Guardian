@@ -53,8 +53,10 @@ export function Navbar() {
             >
               Sign In
             </Button>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 hover-glow">
-              Start Free Trial
+            <Button 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover-glow"
+              onClick={() => router.push("/auth/signup")}>
+              Sign Up
             </Button>
           </div>
 
@@ -107,10 +109,14 @@ export function Navbar() {
                 <Button 
                   variant="ghost" 
                   className="w-full text-left justify-start"
+                  onClick={() => router.push("/auth/login")}
                 >
                   Sign In
                 </Button>
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button 
+                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => router.push("/auth/signup")}
+                >
                   Start Free Trial
                 </Button>
               </div>
