@@ -51,7 +51,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
           <CardHeader>
             <CardTitle>Personal Details</CardTitle>
             <CardDescription>
-              This is your personal information from your GitHub account.
+              This is your personal information from your connected accounts.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import GitHub from 'next-auth/providers/github';
+import Google from 'next-auth/providers/google';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { db } from '@/index';
 
@@ -29,6 +30,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
       },
     }),
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID as string,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
+    }),
   ],
 
   callbacks: {
@@ -39,6 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.expiresAt = account.expires_at;
         token.tokenType = account.token_type;
         token.scope = account.scope;
+        token.provider = account.provider;
       }
       return token;
     },
@@ -56,6 +62,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         accessToken: token?.accessToken as string | undefined,
         refreshToken: token?.refreshToken as string | undefined,
         expiresAt: token?.expiresAt as number | undefined,
+        provider: token?.provider as string | undefined,
       };
 
       return updatedSession;

@@ -2,7 +2,8 @@ import { type Endpoints } from "@octokit/types";
 import { auth } from "@/auth/authSetup";
 import { db } from "@/index";
 import { accounts } from "@/db/schema/accounts";
-import { eq } from "drizzle-orm";
+import { repositories } from "@/db/schema/repositories";
+import { eq, and } from "drizzle-orm";
 import { Octokit } from "@octokit/rest";
 import { RepositoriesTable } from "@/components/dashboard/repositories-table";
 import { redirect } from "next/navigation";
@@ -17,11 +18,43 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  // Prefer token from session if available
   // @ts-expect-error augmented by auth callbacks
-  const sessionAccessToken: string | undefined = session.accessToken;
+  const sessionProvider: string | undefined = session.provider;
   // @ts-expect-error augmented by auth callbacks
-  const sessionRefreshToken: string | undefined = session.refreshToken;
+  const rawSessionAccessToken: string | undefined = session.accessToken;
+  // @ts-expect-error augmented by auth callbacks
+  const rawSessionRefreshToken: string | undefined = session.refreshToken;
+
+  // Query the GitHub account specifically, in case they logged in with Google
+  const githubAccounts = await db.select()
+    .from(accounts)
+    .where(
+      and(
+        eq(accounts.userId, session.user.id),
+        eq(accounts.provider, "github")
+      )
+    )
+    .limit(1);
+
+  const githubAccount = githubAccounts[0];
+  
+  // If they are currently logged in via GitHub, we have a fresh token in the session!
+  // We should use that fresh token instead of the potentially expired one in the DB.
+  let sessionAccessToken = githubAccount?.access_token;
+  let sessionRefreshToken = githubAccount?.refresh_token;
+
+  if (sessionProvider === "github" && rawSessionAccessToken) {
+    sessionAccessToken = rawSessionAccessToken;
+    sessionRefreshToken = rawSessionRefreshToken ?? sessionRefreshToken;
+
+    // Sync the fresh token back to the database for future background jobs
+    if (sessionAccessToken !== githubAccount?.access_token) {
+      await db.update(accounts).set({
+        access_token: sessionAccessToken,
+        refresh_token: sessionRefreshToken ?? null,
+      }).where(and(eq(accounts.userId, session.user.id), eq(accounts.provider, "github")));
+    }
+  }
 
   let repos: Repositories = [];
   let needsReconnect = false;
@@ -112,6 +145,19 @@ export default async function DashboardPage() {
     }
   }
 
+  // Fetch active repositories from the database for this user
+  const activeReposQuery = await db
+    .select({ githubRepoId: repositories.githubRepoId })
+    .from(repositories)
+    .where(
+      and(
+        eq(repositories.userId, session.user.id),
+        eq(repositories.isActive, true)
+      )
+    );
+
+  const activeRepoIds = activeReposQuery.map((r) => Number(r.githubRepoId));
+
   return (
     <div className="h-full">
       <DashboardHeader
@@ -121,6 +167,7 @@ export default async function DashboardPage() {
       />
       {activeAccessToken && !needsReconnect ? (
         <RepositoriesTable
+          activeRepoIds={activeRepoIds}
           repositories={
             repos
               .filter((repo) => repo.updated_at !== null)

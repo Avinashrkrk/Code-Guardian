@@ -34,7 +34,7 @@ export function LoginForm() {
           />
         </svg>
       ),
-      onClick: () => console.log("Google login"),
+      onClick: () => signIn("google", { callbackUrl: "/dashboard" }),
     },
   ];
 

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -11,14 +11,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Search,
   ChevronLeft,
@@ -26,7 +26,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ArrowUpDown,
-} from "lucide-react";
+} from 'lucide-react';
+import Link from 'next/link';
 
 interface Repository {
   id: number;
@@ -42,14 +43,21 @@ interface Repository {
 
 interface RepositoriesTableProps {
   repositories: Repository[];
+  activeRepoIds: number[];
 }
 
-export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+export function RepositoriesTable({ repositories, activeRepoIds }: RepositoriesTableProps) {
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [sortField, setSortField] = useState<"name" | "stargazers_count" | "updated_at">("updated_at");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc"); 
+  const [sortField, setSortField] = useState<
+    'name' | 'stargazers_count' | 'updated_at'
+  >('updated_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const GITHUB_APP_NAME = 'codeguardianpis-dev';
+
+  const installUrl = `https://github.com/apps/${GITHUB_APP_NAME}/installations/new`;
 
   const filteredRepos = repositories.filter((repo) =>
     repo.full_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -59,23 +67,22 @@ export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
     const aValue = a[sortField];
     const bValue = b[sortField];
 
-
-    if (sortField === "updated_at") {
+    if (sortField === 'updated_at') {
       const aDate = new Date(aValue as string).getTime();
       const bDate = new Date(bValue as string).getTime();
-      return sortDirection === "asc" ? aDate - bDate : bDate - aDate;
+      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
     }
-    
-    if (typeof aValue === "string" && typeof bValue === "string") {
-      return sortDirection === "asc"
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc'
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
     }
-    
-    if (typeof aValue === "number" && typeof bValue === "number") {
-      return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
     }
-    
+
     return 0;
   });
 
@@ -84,12 +91,12 @@ export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
   const endIndex = startIndex + rowsPerPage;
   const paginatedRepos = sortedRepos.slice(startIndex, endIndex);
 
-  const handleSort = (field: "name" | "stargazers_count") => {
+  const handleSort = (field: 'name' | 'stargazers_count') => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection("asc");
+      setSortDirection('asc');
     }
   };
 
@@ -115,7 +122,7 @@ export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
             <TableRow className="bg-muted/20 hover:bg-muted/20">
               <TableHead className="font-semibold">
                 <button
-                  onClick={() => handleSort("name")}
+                  onClick={() => handleSort('name')}
                   className="flex items-center space-x-2 hover:text-foreground"
                 >
                   <span>Repository</span>
@@ -125,7 +132,7 @@ export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
               <TableHead className="font-semibold">Visibility</TableHead>
               <TableHead className="font-semibold">
                 <button
-                  onClick={() => handleSort("stargazers_count")}
+                  onClick={() => handleSort('stargazers_count')}
                   className="flex items-center space-x-2 hover:text-foreground"
                 >
                   <span>Stars</span>
@@ -133,58 +140,100 @@ export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
                 </button>
               </TableHead>
               <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="font-semibold text-right">Actions</TableHead>
+              <TableHead className="font-semibold text-right">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedRepos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-12 text-muted-foreground"
+                >
                   {searchQuery
-                    ? "No repositories found matching your search."
-                    : "No repositories available."}
+                    ? 'No repositories found matching your search.'
+                    : 'No repositories available.'}
                 </TableCell>
               </TableRow>
             ) : (
               paginatedRepos.map((repo) => (
-                <TableRow key={repo.id} className="hover:bg-accent/30 transition-colors h-16" >
+                <TableRow
+                  key={repo.id}
+                  className="hover:bg-accent/30 transition-colors h-16"
+                >
                   <TableCell>
                     <div>
-                      <div className="font-medium text-foreground text-base">{repo.full_name}</div>
-                      {/* {repo.description && (
-                        <div className="text-sm text-muted-foreground truncate max-w-md">
-                          {repo.description}
-                        </div>
-                      )} */}
+                      <div className="font-medium text-foreground text-base">
+                        {repo.full_name}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={repo.private ? "secondary" : "outline"}
+                      variant={repo.private ? 'secondary' : 'outline'}
                       className="font-medium"
                     >
-                      {repo.private ? "Private" : "Public"}
+                      {repo.private ? 'Private' : 'Public'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-muted-foreground">{repo.stargazers_count}</span>
+                    <span className="text-muted-foreground">
+                      {repo.stargazers_count}
+                    </span>
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className="bg-muted text-muted-foreground font-medium"
-                    >
-                      Inactive
-                    </Badge>
+                    {activeRepoIds.includes(repo.id) ? (
+                      <Badge
+                        variant="default"
+                        className="bg-green-500/10 text-green-600 hover:bg-green-500/20 hover:text-green-700 font-medium border-green-500/20"
+                      >
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="secondary"
+                        className="bg-muted text-muted-foreground font-medium"
+                      >
+                        Inactive
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-primary/20 text-primary hover:bg-primary/10"
-                    >
-                      Activate
-                    </Button>
+                    {/*
+                      MODIFICATION: Removed `legacyBehavior` and `passHref`
+                      and the inner <a> tag for a cleaner Link component.
+                    */}
+                    {!activeRepoIds.includes(repo.id) ? (
+                      <Link
+                        href={installUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-primary/20 text-primary hover:bg-primary/10"
+                        >
+                          Activate
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link
+                        href={installUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          Settings
+                        </Button>
+                      </Link>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -193,6 +242,7 @@ export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
         </Table>
       </div>
 
+      {/* ... Pagination controls remain the same ... */}
       <div className="flex items-center justify-between pt-4">
         <div className="flex items-center space-x-2">
           <span className="text-sm text-muted-foreground">Rows per page</span>
@@ -242,7 +292,9 @@ export function RepositoriesTable({ repositories }: RepositoriesTableProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
               disabled={currentPage === totalPages || totalPages === 0}
               className="h-9 w-9"
             >
