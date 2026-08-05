@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     else if (event === 'installation' && payload.action === 'deleted') {
       await handleInstallationDeleted(payload.installation.id);
     }
-    else if (event === 'pull_request' && (payload.action === 'opened' || payload.action === 'synchronize')) {
+    else if (event === 'pull_request' && (payload.action === 'opened' || payload.action === 'synchronize' || payload.action === 'reopened')) {
       // Send event to Inngest for background processing
       await inngest.send({
         name: 'github/pull_request.opened',
