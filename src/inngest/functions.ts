@@ -3,7 +3,10 @@ import { getInstallationOctokit } from "@/lib/github";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const processPrReview = inngest.createFunction(
-  { id: "process-pr-review", event: "github/pull_request.opened" },
+  { 
+    id: "process-pr-review",
+    triggers: [{ event: "github/pull_request.opened" }]
+  },
   async ({ event, step }) => {
     const { pull_request, installationId, repositoryFullName } = event.data;
     const [owner, repo] = repositoryFullName.split("/");
