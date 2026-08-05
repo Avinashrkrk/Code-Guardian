@@ -11,6 +11,9 @@ import { DashboardHeader } from "@/components/dashboard/header";
 
 type Repositories = Endpoints["GET /user/repos"]["response"]["data"];
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardPage() {
   const session = await auth();
 
@@ -169,12 +172,10 @@ export default async function DashboardPage() {
         <RepositoriesTable
           activeRepoIds={activeRepoIds}
           repositories={
-            repos
-              .filter((repo) => repo.updated_at !== null)
-              .map((repo) => ({
-                ...repo,
-                updated_at: repo.updated_at ?? "",
-              }))
+            repos.map((repo) => ({
+              ...repo,
+              updated_at: repo.updated_at ?? repo.created_at ?? new Date().toISOString(),
+            }))
           }
         />
       ) : (

@@ -28,6 +28,8 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Repository {
   id: number;
@@ -54,6 +56,24 @@ export function RepositoriesTable({ repositories, activeRepoIds }: RepositoriesT
     'name' | 'stargazers_count' | 'updated_at'
   >('updated_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const router = useRouter();
+
+  // Automatically refresh the dashboard data when the user switches back to this browser tab
+  useEffect(() => {
+    const handleFocus = () => {
+      if (document.visibilityState === 'visible') {
+        router.refresh();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleFocus);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleFocus);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [router]);
 
   const GITHUB_APP_NAME = 'codeguardianpis-dev';
 

@@ -4,6 +4,7 @@ import { db } from '@/index';
 import { accounts } from '@/db/schema/accounts';
 import { repositories } from '@/db/schema/repositories';
 import { eq, inArray, and } from 'drizzle-orm';
+import { inngest } from '@/inngest/client';
 
 export async function POST(req: Request) {
   try {
@@ -34,6 +35,17 @@ export async function POST(req: Request) {
     }
     else if (event === 'installation' && payload.action === 'deleted') {
       await handleInstallationDeleted(payload.installation.id);
+    }
+    else if (event === 'pull_request' && (payload.action === 'opened' || payload.action === 'synchronize')) {
+      // Send event to Inngest for background processing
+      await inngest.send({
+        name: 'github/pull_request.opened',
+        data: {
+          pull_request: payload.pull_request,
+          repositoryFullName: payload.repository.full_name,
+          installationId: payload.installation?.id,
+        },
+      });
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
