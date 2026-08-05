@@ -75,7 +75,7 @@ export function RepositoriesTable({ repositories, activeRepoIds }: RepositoriesT
     };
   }, [router]);
 
-  const GITHUB_APP_NAME = 'codeguardianpis-dev';
+  const GITHUB_APP_NAME = process.env.NEXT_PUBLIC_GITHUB_APP_NAME || 'codeguardianpis-dev';
 
   const installUrl = `https://github.com/apps/${GITHUB_APP_NAME}/installations/new`;
 
