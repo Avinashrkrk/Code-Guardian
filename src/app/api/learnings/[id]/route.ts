@@ -7,7 +7,7 @@ import { auth } from '@/auth/authSetup';
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -15,7 +15,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const learningId = parseInt(params.id);
+    const resolvedParams = await params;
+    const learningId = parseInt(resolvedParams.id);
 
     // Verify ownership of the learning's repository
     const learningCheck = await db.select({
