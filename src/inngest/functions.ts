@@ -1,6 +1,10 @@
 import { inngest } from "./client";
 import { getInstallationOctokit } from "@/lib/github";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { db } from "@/index";
+import { reviewJobs } from "@/db/schema/reviewJobs";
+import { repositories } from "@/db/schema/repositories";
+import { eq } from "drizzle-orm";
 
 export const processPrReview = inngest.createFunction(
   { 
@@ -8,12 +12,42 @@ export const processPrReview = inngest.createFunction(
     triggers: [{ event: "github/pull_request.opened" }]
   },
   async ({ event, step }) => {
-    const { pull_request, installationId, repositoryFullName } = event.data;
+    const { pull_request, installationId, repositoryFullName, githubRepoId } = event.data;
     const [owner, repo] = repositoryFullName.split("/");
 
     if (!installationId) {
       throw new Error("Missing installationId in webhook event.");
     }
+
+    // Step 0: Create the review job in the database
+    const reviewJobId = await step.run("create-review-job", async () => {
+      if (!githubRepoId) {
+        console.warn("No githubRepoId in event data, skipping DB logging.");
+        return null;
+      }
+      
+      const repoRecords = await db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.githubRepoId, githubRepoId))
+        .limit(1);
+        
+      if (repoRecords.length === 0) {
+        console.warn(`Repository with githubRepoId ${githubRepoId} not found in DB.`);
+        return null;
+      }
+      
+      const repo = repoRecords[0];
+      
+      const result = await db.insert(reviewJobs).values({
+        repoId: repo.id,
+        pullRequestNumber: pull_request.number.toString(),
+        status: 'in_progress',
+        inngestJobId: event.id,
+      }).returning({ id: reviewJobs.id });
+      
+      return result[0]?.id;
+    });
 
     // Step 1: Fetch the PR Diff from GitHub
     const diff = await step.run("fetch-pr-diff", async () => {
@@ -87,6 +121,15 @@ Format your response in Markdown, highlighting specific files or code blocks whe
         body: reviewBody,
       });
     });
+
+    // Step 4: Mark job as completed
+    if (reviewJobId) {
+      await step.run("mark-job-completed", async () => {
+        await db.update(reviewJobs)
+          .set({ status: 'completed', completedAt: new Date() })
+          .where(eq(reviewJobs.id, reviewJobId));
+      });
+    }
 
     return { 
       status: "success", 

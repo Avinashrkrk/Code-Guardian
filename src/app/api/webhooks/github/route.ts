@@ -44,6 +44,7 @@ export async function POST(req: Request) {
           pull_request: payload.pull_request,
           repositoryFullName: payload.repository.full_name,
           installationId: payload.installation?.id,
+          githubRepoId: payload.repository.id.toString(),
         },
       });
     }
