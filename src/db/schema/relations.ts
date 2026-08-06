@@ -4,6 +4,7 @@ import { accounts } from './accounts';
 import { sessions } from './sessions';
 import { repositories } from './repositories';
 import { reviewJobs } from './reviewJobs';
+import { learnings } from './learnings';
 
 // A user can have many accounts (e.g., GitHub, Google)
 export const usersRelations = relations(users, ({ many }) => ({
@@ -35,12 +36,21 @@ export const repositoriesRelations = relations(repositories, ({ one, many }) => 
     references: [users.id],
   }),
   reviewJobs: many(reviewJobs),
+  learnings: many(learnings),
 }));
 
 // A review job belongs to one repository
 export const reviewJobsRelations = relations(reviewJobs, ({ one }) => ({
   repository: one(repositories, {
     fields: [reviewJobs.repoId],
+    references: [repositories.id],
+  }),
+}));
+
+// A learning belongs to one repository
+export const learningsRelations = relations(learnings, ({ one }) => ({
+  repository: one(repositories, {
+    fields: [learnings.repoId],
     references: [repositories.id],
   }),
 }));

@@ -4,6 +4,7 @@ import * as sessions from './sessions';
 import * as verificationTokens from './verificationTokens';
 import * as repositories from './repositories';
 import * as reviewJobs from './reviewJobs';
+import * as learnings from './learnings';
 import * as relations from './relations';
 
 // This single object is what you'll import when you need to use your schema.
@@ -14,6 +15,7 @@ const schema = {
   ...verificationTokens,
   ...repositories,
   ...reviewJobs,
+  ...learnings,
   ...relations,
 };
 

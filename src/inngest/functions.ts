@@ -3,7 +3,9 @@ import { getInstallationOctokit } from "@/lib/github";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db } from "@/index";
 import { reviewJobs } from "@/db/schema/reviewJobs";
+import { learnings } from "@/db/schema/learnings";
 import { repositories } from "@/db/schema/repositories";
+import { buildCodeReviewPrompt } from "@/lib/prompts/codeReview";
 import { eq } from "drizzle-orm";
 
 export const processPrReview = inngest.createFunction(
@@ -79,29 +81,23 @@ export const processPrReview = inngest.createFunction(
         throw new Error("GEMINI_API_KEY is missing from environment variables.");
       }
 
+      // Fetch custom learnings for this repo
+      let customInstructions = "";
+      if (githubRepoId) {
+        const repoRecords = await db.select().from(repositories).where(eq(repositories.githubRepoId, githubRepoId)).limit(1);
+        if (repoRecords.length > 0) {
+          const repoId = repoRecords[0].id;
+          const repoLearnings = await db.select().from(learnings).where(eq(learnings.repoId, repoId));
+          if (repoLearnings.length > 0) {
+            customInstructions = `\n\nCRITICAL TEAM INSTRUCTIONS:\nPlease strictly follow these custom rules provided by the team:\n` + repoLearnings.map(l => `- ${l.instruction}`).join("\n");
+          }
+        }
+      }
+
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-      const prompt = `
-You are an expert senior software engineer and a strict code reviewer. 
-Review the following Pull Request code diff.
-
-Focus on:
-1. Bugs, logic errors, or edge cases.
-2. Security vulnerabilities.
-3. Performance issues.
-4. Clean code and best practices.
-
-Do NOT nitpick minor formatting (like spacing or single vs double quotes).
-If the code looks perfect, just say "Great job, the code looks solid!"
-
-Here is the diff:
-\`\`\`diff
-${diff.slice(0, 50000)} // truncate to avoid token limits on massive PRs
-\`\`\`
-
-Format your response in Markdown, highlighting specific files or code blocks where necessary.
-`;
+      const prompt = buildCodeReviewPrompt(diff, customInstructions);
 
       const result = await model.generateContent(prompt);
       return result.response.text();
