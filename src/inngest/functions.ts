@@ -73,6 +73,20 @@ export const processPrReview = inngest.createFunction(
       return { status: "skipped", message: "No code changes found in this PR." };
     }
 
+    // Step 1.5: Post an initial "review is ongoing" comment
+    const initialCommentId = await step.run("post-initial-comment", async () => {
+      const octokit = await getInstallationOctokit(installationId);
+      
+      const response = await octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: pull_request.number,
+        body: "### 🤖 Code Guardian\n\nI am currently analyzing your code changes. A detailed review will be posted here shortly... ⏳",
+      });
+
+      return response.data.id;
+    });
+
     // Step 2: Pass the Diff to Google Gemini AI
     const reviewResult = await step.run("generate-ai-review", async () => {
       console.log(`Generating AI review for PR #${pull_request.number}...`);
@@ -110,10 +124,10 @@ export const processPrReview = inngest.createFunction(
 
       const reviewBody = `### 🤖 Code Guardian AI Review\n\n${reviewResult}`;
 
-      await octokit.issues.createComment({
+      await octokit.issues.updateComment({
         owner,
         repo,
-        issue_number: pull_request.number, // PRs are treated as issues in the GitHub API
+        comment_id: initialCommentId,
         body: reviewBody,
       });
     });

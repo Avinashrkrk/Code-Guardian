@@ -1,11 +1,31 @@
-"use client"
+"use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Github } from "lucide-react";
-import { signIn } from "next-auth/react"
+import { Github, AlertCircle } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export function LoginForm() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+
+  const getErrorMessage = (errorCode: string) => {
+    switch (errorCode) {
+      case "CallbackRouteError":
+      case "OAuthCallbackError":
+        return "Failed to complete sign in. Please verify your credentials or try again.";
+      case "OAuthAccountNotLinked":
+        return "To confirm your identity, sign in with the same account you used originally.";
+      case "AccessDenied":
+        return "Access was denied. Please grant the requested permissions to continue.";
+      case "Configuration":
+        return "Server authentication configuration error. Please check server logs.";
+      default:
+        return "An unexpected error occurred during authentication. Please try again.";
+    }
+  };
+
   const providers = [
     {
       name: "GitHub",
@@ -40,6 +60,13 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-3 rounded-lg bg-destructive/15 border border-destructive/30 text-destructive text-sm flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{getErrorMessage(error)}</span>
+        </div>
+      )}
+
       {/* OAuth Providers */}
       <div className="space-y-4">
         {providers.map((provider) => {
@@ -48,7 +75,7 @@ export function LoginForm() {
             <Button
               key={provider.name}
               variant="outline"
-              className="w-full h-14 text-left justify-start space-x-4 border-border/50 text-foreground hover:text-primary bg-background/50 backdrop-blur-sm"
+              className="w-full h-14 text-left justify-start space-x-4 border-border/50 text-foreground hover:text-primary bg-background/50 backdrop-blur-sm cursor-pointer"
               onClick={provider.onClick}
             >
               <Icon className="w-6 h-6" />
