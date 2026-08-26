@@ -90,7 +90,7 @@ export const processPrReview = inngest.createFunction(
     // Step 2: Pass the Diff to Google Gemini AI
     const reviewResult = await step.run("generate-ai-review", async () => {
       console.log(`Generating AI review for PR #${pull_request.number}...`);
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY?.trim();
       if (!apiKey) {
         throw new Error("GEMINI_API_KEY is missing from environment variables.");
       }
@@ -109,12 +109,28 @@ export const processPrReview = inngest.createFunction(
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
       const prompt = buildCodeReviewPrompt(diff, customInstructions);
 
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      const candidateModels = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash"];
+      let lastError: unknown;
+
+      for (const modelName of candidateModels) {
+        try {
+          console.log(`Attempting review with ${modelName}...`);
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(prompt);
+          const text = result.response.text();
+          if (text && text.trim().length > 0) {
+            console.log(`Successfully generated review with ${modelName}`);
+            return text;
+          }
+        } catch (err) {
+          console.warn(`Model ${modelName} failed, trying fallback:`, err);
+          lastError = err;
+        }
+      }
+
+      throw new Error(`All Gemini AI models failed: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
     });
 
     // Step 3: Post the AI Review back to the GitHub PR
