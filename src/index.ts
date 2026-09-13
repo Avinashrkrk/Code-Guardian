@@ -9,7 +9,6 @@ if (!process.env.DATABASE_URL) {
 
 // Extract hostname from DATABASE_URL
 const url = new URL(process.env.DATABASE_URL);
-const hostname = url.hostname;
 
 // A custom Pool that completely bypasses the buggy DNS resolver in Next.js/Bun
 const pool = new Pool({
@@ -17,14 +16,14 @@ const pool = new Pool({
 });
 
 // We override the pg driver's internal socket connection to force IPv4 manual resolution
-pool.on('connect', (client) => {
+pool.on('connect', () => {
   // We can't easily intercept net.Socket in pg here, but we can do a global override for dns.lookup
 });
 
 // A much better and globally effective way:
 // Force Node's dns.lookup to use a specific family and avoid the ENOTFOUND bug
 const originalLookup = dns.lookup;
-// @ts-ignore
+// @ts-expect-error
 dns.lookup = function (domain, options, callback) {
   let isAll = false;
   if (typeof options === 'function') {
