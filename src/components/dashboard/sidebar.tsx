@@ -294,7 +294,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
     { name: "Repositories", href: "/dashboard", icon: Database },
     { name: "Dashboard", href: "/dashboard/overview", icon: LayoutDashboard, locked: true },
     { name: "Integrations", href: "/dashboard/integrations", icon: Plug, locked: true },
-    { name: "Reports", href: "/dashboard/reports", icon: FileText, locked: true },
+    { name: "Reports", href: "/dashboard/reports", icon: FileText },
     { name: "Learnings", href: "/dashboard/learnings", icon: BookOpen },
   ];
 
