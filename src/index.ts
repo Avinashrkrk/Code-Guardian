@@ -36,6 +36,7 @@ dns.lookup = function (domain, options, callback) {
     dns.resolve4(domain, (err, addresses) => {
       if (err || !addresses || addresses.length === 0) {
         // Fallback to original
+        // @ts-expect-error - TypeScript complains about overloaded function signatures
         return originalLookup(domain, options, callback);
       }
       
@@ -46,6 +47,7 @@ dns.lookup = function (domain, options, callback) {
       }
     });
   } else {
+    // @ts-expect-error - TypeScript complains about overloaded function signatures
     originalLookup(domain, options, callback);
   }
 };
