@@ -48,6 +48,19 @@ export async function POST(req: Request) {
         },
       });
     }
+    else if (event === 'issue_comment' && payload.action === 'created' && payload.issue?.pull_request) {
+      // PR comments are treated as issue_comments in GitHub API
+      await inngest.send({
+        name: 'github/issue_comment.created',
+        data: {
+          comment: payload.comment,
+          issue: payload.issue,
+          repositoryFullName: payload.repository.full_name,
+          installationId: payload.installation?.id,
+          githubRepoId: payload.repository.id.toString(),
+        },
+      });
+    }
 
     return NextResponse.json({ received: true }, { status: 200 });
 

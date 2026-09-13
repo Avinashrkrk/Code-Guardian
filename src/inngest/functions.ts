@@ -6,6 +6,7 @@ import { reviewJobs } from "@/db/schema/reviewJobs";
 import { learnings } from "@/db/schema/learnings";
 import { repositories } from "@/db/schema/repositories";
 import { buildCodeReviewPrompt } from "@/lib/prompts/codeReview";
+import { buildChatPrompt } from "@/lib/prompts/chat";
 import { eq } from "drizzle-orm";
 
 export const processPrReview = inngest.createFunction(
@@ -161,5 +162,96 @@ export const processPrReview = inngest.createFunction(
       status: "success", 
       message: `Successfully reviewed PR #${pull_request.number}` 
     };
+  }
+);
+
+export const processChatComment = inngest.createFunction(
+  {
+    id: "process-chat-comment",
+    triggers: [{ event: "github/issue_comment.created" }]
+  },
+  async ({ event, step }) => {
+    const { comment, issue, installationId, repositoryFullName, githubRepoId } = event.data;
+    const [owner, repo] = repositoryFullName.split("/");
+
+    // 1. Validation
+    if (comment.user.type === "Bot" || comment.user.login.includes("bot")) {
+      return { status: "skipped", message: "Comment is from a bot." };
+    }
+
+    if (!comment.body.includes("@CodeGuardian")) {
+      return { status: "skipped", message: "Bot was not mentioned." };
+    }
+
+    // 2.5 Post an initial "processing" comment to let the user know the bot is working
+    const initialCommentId = await step.run("post-initial-chat-comment", async () => {
+      const octokit = await getInstallationOctokit(installationId);
+      const response = await octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: issue.number,
+        body: `> 🤖 **@CodeGuardian** is thinking...\n> \n> <sub>*Processing your request, please wait a moment.* ⏳</sub>`,
+      });
+      return response.data.id;
+    });
+
+    // 2. Fetch Diff
+    const diff = await step.run("fetch-pr-diff", async () => {
+      const octokit = await getInstallationOctokit(installationId);
+      const response = await octokit.request("GET /repos/{owner}/{repo}/pulls/{pull_number}", {
+        owner,
+        repo,
+        pull_number: issue.number,
+        mediaType: { format: "diff" },
+      });
+      return response.data as unknown as string;
+    });
+
+    // 3. Run AI
+    const reply = await step.run("generate-chat-reply", async () => {
+      const apiKey = process.env.GEMINI_API_KEY?.trim();
+      if (!apiKey) throw new Error("GEMINI_API_KEY is missing.");
+
+      let customInstructions = "";
+      if (githubRepoId) {
+        const repoRecords = await db.select().from(repositories).where(eq(repositories.githubRepoId, githubRepoId)).limit(1);
+        if (repoRecords.length > 0) {
+          const repoId = repoRecords[0].id;
+          const repoLearnings = await db.select().from(learnings).where(eq(learnings.repoId, repoId));
+          if (repoLearnings.length > 0) {
+            customInstructions = repoLearnings.map(l => "- " + l.instruction).join("\n");
+          }
+        }
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const prompt = buildChatPrompt(diff, comment.body, customInstructions);
+
+      const candidateModels = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash"];
+      for (const modelName of candidateModels) {
+        try {
+          const model = genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent(prompt);
+          const text = result.response.text();
+          if (text) return text;
+        } catch (e) {
+          console.warn("Model " + modelName + " failed, trying fallback:", e);
+        }
+      }
+      throw new Error("All Gemini AI models failed.");
+    });
+
+    // 4. Update the initial comment with the final reply
+    await step.run("update-chat-reply", async () => {
+      const octokit = await getInstallationOctokit(installationId);
+      await octokit.issues.updateComment({
+        owner,
+        repo,
+        comment_id: initialCommentId,
+        body: "### 🤖 Code Guardian\n\n" + reply,
+      });
+    });
+
+    return { status: "success", message: "Replied to comment." };
   }
 );
