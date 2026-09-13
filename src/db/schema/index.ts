@@ -1,22 +1,8 @@
-import * as users from './users';
-import * as accounts from './accounts';
-import * as sessions from './sessions';
-import * as verificationTokens from './verificationTokens';
-import * as repositories from './repositories';
-import * as reviewJobs from './reviewJobs';
-import * as learnings from './learnings';
-import * as relations from './relations';
-
-// This single object is what you'll import when you need to use your schema.
-const schema = {
-  ...users,
-  ...accounts,
-  ...sessions,
-  ...verificationTokens,
-  ...repositories,
-  ...reviewJobs,
-  ...learnings,
-  ...relations,
-};
-
-export default schema;
+export * from './users';
+export * from './accounts';
+export * from './sessions';
+export * from './verificationTokens';
+export * from './repositories';
+export * from './reviewJobs';
+export * from './learnings';
+export * from './relations';
