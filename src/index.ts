@@ -7,9 +7,6 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set in the environment variables');
 }
 
-// Extract hostname from DATABASE_URL
-const url = new URL(process.env.DATABASE_URL);
-
 // A custom Pool that completely bypasses the buggy DNS resolver in Next.js/Bun
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -23,7 +20,7 @@ pool.on('connect', () => {
 // A much better and globally effective way:
 // Force Node's dns.lookup to use a specific family and avoid the ENOTFOUND bug
 const originalLookup = dns.lookup;
-// @ts-expect-error
+// @ts-expect-error - Overriding the built-in dns.lookup for Neon bypass
 dns.lookup = function (domain, options, callback) {
   let isAll = false;
   if (typeof options === 'function') {
