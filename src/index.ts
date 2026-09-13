@@ -41,9 +41,11 @@ dns.lookup = function (domain, options, callback) {
       }
       
       if (isAll) {
-        callback(null, addresses.map(ip => ({ address: ip, family: 4 })));
+        const cb = callback as (err: null, addresses: dns.LookupAddress[]) => void;
+        cb(null, addresses.map(ip => ({ address: ip, family: 4 })));
       } else {
-        callback(null, addresses[0], 4);
+        const cb = callback as (err: null, address: string, family: number) => void;
+        cb(null, addresses[0], 4);
       }
     });
   } else {
