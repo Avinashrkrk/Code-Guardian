@@ -179,7 +179,9 @@ export const processChatComment = inngest.createFunction(
       return { status: "skipped", message: "Comment is from a bot." };
     }
 
-    if (!comment.body.includes("@CodeGuardian")) {
+    // Check if the bot is mentioned (case-insensitive, supporting @CodeGuardian and @code-guardian)
+    const mentionsBot = /@codeguardian|@code-guardian/i.test(comment.body);
+    if (!mentionsBot) {
       return { status: "skipped", message: "Bot was not mentioned." };
     }
 
